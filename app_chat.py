@@ -33,9 +33,11 @@ def get_highlighted_text(query, content):
         }
     ]
     prompt = """
-        Can you highlight the part that is relevant to my query? Please return the highlighted text in the paragraph and with the following format: <b>highlighted text</b>.
+        Can you highlight the part that is relevant to my query?
         Dont return me an answer. I just need the paragraph with the highlighted text. I will print it as a search result.
         If nothing is relevant, please return the first paragraph.
+        Please return the "highlighted text" in the paragraph between <b> and </b>.
+        The result should be html
     """
 
     messages.append({
@@ -72,6 +74,7 @@ def app():
         results = client.search(search_text=query, top=1)
         for result in results:
             text = get_highlighted_text(query, result['content'])
+            st.write("<a href='#'>Go to the document</a>", unsafe_allow_html=True)
             st.write(text, unsafe_allow_html=True)
             st.write('------------------------')
 
