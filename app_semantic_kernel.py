@@ -39,7 +39,7 @@ index_name = os.environ["AZURE_SEARCH_INDEX_NAME"]
 admin_key = os.environ["AZURE_SEARCH_ADMIN_KEY"]
 credential = AzureKeyCredential(admin_key)
 client = SearchClient(endpoint=search_url, index_name=index_name, credential=credential)
-openai.api_key = os.environ["AZURE_OPENAI_KEY"]
+openai.api_key = os.environ["AZURE_OPENAI_API_KEY"]
 openai.api_type = "azure"
 openai.api_version = "2023-05-15" 
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT") 
@@ -62,20 +62,9 @@ async def run_query(query):
 async def get_highlighted_text(query, content):
 
     system_message = """
-    You are a chat bot. You have one goal: figure out what id the most relevant part of the text given a search query.
+    You are an assitant for a lawyer. You are given contracts and you need to try to response based on the provided data.
     """
     kernel = sk.Kernel()
-    AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
-    AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
-    AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
-    AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
-    AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
-    AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
-    AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
-    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
-    AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
-    AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
-    AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo")
     deployment, api_key, endpoint = sk.azure_openai_settings_from_dot_env()
     kernel.add_chat_service(
         "gpt-35-turbo", sk_oai.AzureChatCompletion(deployment, endpoint, api_key)
