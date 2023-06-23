@@ -20,7 +20,7 @@ from azure.search.documents.indexes.models import (
     SemanticField,  
     SearchField,  
     SemanticSettings,  
-    VectorSearch,  
+    VectorSearch,
     VectorSearchAlgorithmConfiguration,  
 )  
 
@@ -46,23 +46,25 @@ def generate_embeddings(text):
 def run_query(query):
     
     return client.search(  
-        search_text=query,  
+        search_text="",  
         vector=Vector(value=generate_embeddings(query), k=3, fields="contentVector"),  
-        select=["content"] 
-    )  
+        select=["title", "content"] 
+    )
+
 def get_highlighted_text(query, content):
+
+    prompt = """
+        Can you highlight the sentence that is most relevant to my search term? 
+        Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p>. 
+        The result must be html
+    """
 
     messages = [
         {
             "role": "system",
-            "content": os.environ["AZURE_OPENAI_SYSTEM_MESSAGE"]
+            "content": "You are an assitant for a lawyer. You are given contracts and you need to try to response based on the provided data." # prompt #os.environ["AZURE_OPENAI_SYSTEM_MESSAGE"]
         }
     ]
-    prompt = """
-        Can you highlight the sentence that is relevant to my search term? 
-        Please return the "highlighted text" in the paragraph between <b> and </b>. 
-        The result must be html
-    """
 
     messages.append({
         "role": "user" ,
@@ -78,7 +80,9 @@ def get_highlighted_text(query, content):
         "role": "user" ,
         "content": "The content is '" + content + "'"
     })
-
+    print("---------PROMPT---------")
+    print(messages)
+    print("---------PROMPT---------")
     response = openai.ChatCompletion.create(
         engine=os.environ["AZURE_OPENAI_MODEL_NAME"],
         messages = messages,
@@ -87,7 +91,9 @@ def get_highlighted_text(query, content):
         top_p=float(os.environ["AZURE_OPENAI_TOP_P"]),
         stop=None
     )
-
+    print("---------RESPONSE---------")
+    print(response)
+    print("---------RESPONSE---------")
     return response.choices[0].message['content']
 
 # Define the Streamlit app
@@ -95,16 +101,16 @@ def app():
     st.title("Search query")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
-        results = client.search(search_text=query, top=3)
+        results = run_query(query)
     
         for result in results:
             text = get_highlighted_text(query, result['content'])  
-            st.write(f"Title: {result['title']}")  
+            st.write(f"<h2>Title: {result['title']}</h2>", unsafe_allow_html=True)  
             st.write(f"Score: {result['@search.score']}")  
             st.write(f"Highlight: {text}", unsafe_allow_html=True)
-            st.write(f"Content: {result['content'][:1000]}")
+            # st.write(f"Content: {result['content'][:1000]}")
                 
-            # st.write('------------------------')
+        # st.write('------------------------')
 
 if __name__ == "__main__":
     app()
