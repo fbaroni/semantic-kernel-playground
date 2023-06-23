@@ -37,18 +37,11 @@ openai.api_type = "azure"
 openai.api_version = "2023-05-15" 
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT") 
 
-def generate_embeddings(text):
-    response = openai.Embedding.create(
-        input=text, engine="text-embedding-ada-002")
-    embeddings = response['data'][0]['embedding']
-    return embeddings
-
 def run_query(query):
     
     return client.search(  
-        search_text="",  
-        vector=Vector(value=generate_embeddings(query), k=3, fields="contentVector"),  
-        select=["content"] 
+        search_text=query,  
+        select=["title", "content"] 
     )  
 def get_highlighted_text(query, content):
 
@@ -59,11 +52,11 @@ def get_highlighted_text(query, content):
         }
     ]
     prompt = """
-        Can you highlight the sentence that is relevant to my query? I want to show why the query matched that result. 
+        Can you highlight the part that is relevant to my query?
         Dont return me an answer. I just need the paragraph with the highlighted text. I will print it as a search result.
-        If nothing is relevant, please return the first paragraph and dont add any text like "In the given text, there is no sentence that matches the query".
-        Please return the "highlighted text" in the paragraph between <b> and </b>. The highglihted text can be more than one sentence.
-        The result must be html and only with original content from the paragraph. No additional text is allowed.
+        If nothing is relevant, please return the first paragraph.
+        Please return the "highlighted text" in the paragraph between <b> and </b>.
+        The result should be html
     """
 
     messages.append({
@@ -98,9 +91,9 @@ def app():
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = client.search(search_text=query, top=3)
-    
         for result in results:
             text = get_highlighted_text(query, result['content'])
+            st.write("<a href='#'>Go to the document</a>", unsafe_allow_html=True)
             st.write(text, unsafe_allow_html=True)
             st.write('------------------------')
 
