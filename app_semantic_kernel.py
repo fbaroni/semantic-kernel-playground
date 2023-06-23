@@ -10,6 +10,27 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 import semantic_kernel.connectors.ai.open_ai as sk_oai
 from semantic_kernel.connectors.ai.open_ai import OpenAITextCompletion, AzureTextCompletion
+from tenacity import retry, wait_random_exponential, stop_after_attempt  
+from azure.core.credentials import AzureKeyCredential  
+from azure.search.documents import SearchClient  
+from azure.search.documents.indexes import SearchIndexClient  
+from azure.search.documents.models import Vector  
+from azure.search.documents.indexes.models import (  
+    SearchIndex,  
+    SearchField,  
+    SearchFieldDataType,  
+    SimpleField,  
+    SearchableField,  
+    SearchIndex,  
+    SemanticConfiguration,  
+    PrioritizedFields,  
+    SemanticField,  
+    SearchField,  
+    SemanticSettings,  
+    VectorSearch,  
+    VectorSearchAlgorithmConfiguration,  
+)  
+import openai
 
 # logger = logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
 # Set up the search client
@@ -18,13 +39,25 @@ index_name = os.environ["AZURE_SEARCH_INDEX_NAME"]
 admin_key = os.environ["AZURE_SEARCH_ADMIN_KEY"]
 credential = AzureKeyCredential(admin_key)
 client = SearchClient(endpoint=search_url, index_name=index_name, credential=credential)
+openai.api_key = os.environ["AZURE_OPENAI_KEY"]
+openai.api_type = "azure"
+openai.api_version = "2023-05-15" 
+openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT") 
 _executor = ThreadPoolExecutor(1)
+
+def generate_embeddings(text):
+    response = openai.Embedding.create(
+        input=text, engine="text-embedding-ada-002")
+    embeddings = response['data'][0]['embedding']
+    return embeddings
 
 # Define the query function
 async def run_query(query):
-    # TODO vector search
-    results = client.search(search_text=query, top=3)
-    return results.get_results()
+    return client.search(  
+        search_text=query,  
+        vector=Vector(value=generate_embeddings(query), k=3, fields="contentVector"),  
+        select=["title", "content"] 
+    )  
 
 async def get_highlighted_text(query, content):
 
@@ -32,6 +65,17 @@ async def get_highlighted_text(query, content):
     You are a chat bot. You have one goal: figure out what id the most relevant part of the text given a search query.
     """
     kernel = sk.Kernel()
+    AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
+    AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
+    AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
+    AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
+    AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
+    AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
+    AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
+    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+    AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
+    AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
+    AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo")
     deployment, api_key, endpoint = sk.azure_openai_settings_from_dot_env()
     kernel.add_chat_service(
         "gpt-35-turbo", sk_oai.AzureChatCompletion(deployment, endpoint, api_key)
@@ -52,17 +96,17 @@ async def get_highlighted_text(query, content):
     chat_function = kernel.register_semantic_function("ChatBot", "Chat", function_config)
     context_vars = sk.ContextVariables()
     bot_answer = await kernel.run_async(chat_function, input_vars=context_vars)
-
+    print(bot_answer)
     return str(bot_answer)
 # Define the Streamlit app
 async def app():
     st.title("Search query")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
-        results = await client.search(search_text=query)
+        results = await run_query(query)
         for result in results:
             # TODO highlight with chatgpt
-            text = get_highlighted_text(query, result['content'])
+            text = await get_highlighted_text(query, result['content'])
             st.write(text)
             st.write('------------------------')
 
