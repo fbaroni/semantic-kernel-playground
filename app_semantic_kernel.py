@@ -6,6 +6,8 @@ from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 import semantic_kernel as sk
 import asyncio
+import time
+from concurrent.futures import ThreadPoolExecutor
 import semantic_kernel.connectors.ai.open_ai as sk_oai
 from semantic_kernel.connectors.ai.open_ai import OpenAITextCompletion, AzureTextCompletion
 
@@ -16,9 +18,10 @@ index_name = os.environ["AZURE_SEARCH_INDEX_NAME"]
 admin_key = os.environ["AZURE_SEARCH_ADMIN_KEY"]
 credential = AzureKeyCredential(admin_key)
 client = SearchClient(endpoint=search_url, index_name=index_name, credential=credential)
+_executor = ThreadPoolExecutor(1)
 
 # Define the query function
-def run_query(query):
+async def run_query(query):
     # TODO vector search
     results = client.search(search_text=query, top=3)
     return results.get_results()
@@ -52,11 +55,11 @@ async def get_highlighted_text(query, content):
 
     return str(bot_answer)
 # Define the Streamlit app
-def app():
+async def app():
     st.title("Search query")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
-        results = client.search(search_text=query)
+        results = await client.search(search_text=query)
         for result in results:
             # TODO highlight with chatgpt
             text = get_highlighted_text(query, result['content'])

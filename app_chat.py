@@ -46,7 +46,7 @@ def generate_embeddings(text):
 def run_query(query):
     
     return client.search(  
-        search_text="",  
+        search_text=query,  
         vector=Vector(value=generate_embeddings(query), k=3, fields="contentVector"),  
         select=["content"] 
     )  
@@ -59,11 +59,9 @@ def get_highlighted_text(query, content):
         }
     ]
     prompt = """
-        Can you highlight the sentence that is relevant to my query? I want to show why the query matched that result. 
-        Dont return me an answer. I just need the paragraph with the highlighted text. I will print it as a search result.
-        If nothing is relevant, please return the first paragraph and dont add any text like "In the given text, there is no sentence that matches the query".
-        Please return the "highlighted text" in the paragraph between <b> and </b>. The highglihted text can be more than one sentence.
-        The result must be html and only with original content from the paragraph. No additional text is allowed.
+        Can you highlight the sentence that is relevant to my search term? 
+        Please return the "highlighted text" in the paragraph between <b> and </b>. 
+        The result must be html
     """
 
     messages.append({
@@ -73,12 +71,12 @@ def get_highlighted_text(query, content):
 
     messages.append({
         "role": "user" ,
-        "content": "The query is " + query
+        "content": "The search term is '" + query + "'"
     })
 
     messages.append({
         "role": "user" ,
-        "content": "The content is " + content
+        "content": "The content is '" + content + "'"
     })
 
     response = openai.ChatCompletion.create(
@@ -100,9 +98,13 @@ def app():
         results = client.search(search_text=query, top=3)
     
         for result in results:
-            text = get_highlighted_text(query, result['content'])
-            st.write(text, unsafe_allow_html=True)
-            st.write('------------------------')
+            text = get_highlighted_text(query, result['content'])  
+            st.write(f"Title: {result['title']}")  
+            st.write(f"Score: {result['@search.score']}")  
+            st.write(f"Highlight: {text}", unsafe_allow_html=True)
+            st.write(f"Content: {result['content'][:1000]}")
+                
+            # st.write('------------------------')
 
 if __name__ == "__main__":
     app()
