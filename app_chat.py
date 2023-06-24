@@ -55,7 +55,7 @@ def get_highlighted_text(query, content):
 
     prompt = """
         Can you highlight the sentence that is most relevant to my search term? 
-        Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p>. 
+        Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p> and translated to the language in which the search term was written. 
         The result must be html
     """
 
@@ -105,10 +105,10 @@ def app():
     
         for result in results:
             text = get_highlighted_text(query, result['content'])  
-            st.write(f"<h2>Title: {result['title']}</h2>", unsafe_allow_html=True)  
+            st.write(f"<h4>Title: {result['title']}</h4>", unsafe_allow_html=True)  
             st.write(f"Score: {result['@search.score']}")  
             st.write(f"Highlight: {text}", unsafe_allow_html=True)
-            # st.write(f"Content: {result['content'][:1000]}")
+            st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
                 
         # st.write('------------------------')
 

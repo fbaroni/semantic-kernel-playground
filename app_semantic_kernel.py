@@ -71,7 +71,7 @@ async def get_highlighted_text(query, content):
     )
 
     prompt_config = sk.PromptTemplateConfig.from_completion_parameters(
-        max_tokens=2000, temperature=0.7, top_p=0.8
+        max_tokens=3000, temperature=0.9, top_p=0.8
     )
 
     prompt_template = sk.ChatPromptTemplate(
@@ -79,13 +79,22 @@ async def get_highlighted_text(query, content):
     )
 
     prompt_template.add_system_message(system_message)
-    prompt_template.add_user_message("Can you return me the paragraph where the highlighted part appears? The query is \"{}\"".format(query) + " and the context is: " + content) 
+    prompt = """
+        Can you highlight the sentence that is most relevant to my search term? 
+        Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p>. 
+        The result must be html
+    """
+    prompt_template.add_user_message(prompt) 
+
+    prompt_template.add_user_message("The query is \"{}\"".format(query) + " and the content is: " + content) 
 
     function_config = sk.SemanticFunctionConfig(prompt_config, prompt_template)
     chat_function = kernel.register_semantic_function("ChatBot", "Chat", function_config)
     context_vars = sk.ContextVariables()
     bot_answer = await kernel.run_async(chat_function, input_vars=context_vars)
+    print("---------RESPONSE---------")
     print(bot_answer)
+    print("---------RESPONSE---------")
     return str(bot_answer)
 # Define the Streamlit app
 async def app():
@@ -94,11 +103,11 @@ async def app():
     if st.button("Search"):
         results = await run_query(query)
         for result in results:
-            # TODO highlight with chatgpt
-            text = await get_highlighted_text(query, result['content'])
-            st.write(text)
-            st.write('------------------------')
+            text = await get_highlighted_text(query, result['content'])  
+            st.write(f"<h4>Title: {result['title']}</h4>", unsafe_allow_html=True)  
+            st.write(f"Score: {result['@search.score']}")  
+            st.write(f"Answer: {text}", unsafe_allow_html=True)
+            st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
 
-        st.write("Total number of documents found: {}\n".format(results.get_count()))
 if __name__ == "__main__":
     asyncio.run(app())
