@@ -53,16 +53,22 @@ def run_query(query):
 
 def get_highlighted_text(query, content):
 
+    # prompt = """
+    #     Can you highlight the sentence that is most relevant to my search term? 
+    #     Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p> and translated to the language in which the search term was written. 
+    #     The result must be html
+    # """
+
     prompt = """
-        Can you highlight the sentence that is most relevant to my search term? 
-        Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p> and translated to the language in which the search term was written. 
-        The result must be html
+        highlight the sentence that is most relevant to my search query by adding <b style="color:blue;"> sentence </b>. 
+        Reply only with the whole paragraph.
+        The answer should be structured like: <entire paragraph>
     """
 
     messages = [
         {
             "role": "system",
-            "content": "You are an assitant for a lawyer. You are given contracts and you need to try to response based on the provided data." # prompt #os.environ["AZURE_OPENAI_SYSTEM_MESSAGE"]
+            "content": "You are an assitant for a lawyer. You are given contracts and you must reply based on the provided data." 
         }
     ]
 
@@ -73,16 +79,13 @@ def get_highlighted_text(query, content):
 
     messages.append({
         "role": "user" ,
-        "content": "The search term is '" + query + "'"
+        "content": "The search query is '" + query + "'"
     })
 
     messages.append({
         "role": "user" ,
         "content": "The content is '" + content + "'"
     })
-    print("---------PROMPT---------")
-    print(messages)
-    print("---------PROMPT---------")
     response = openai.ChatCompletion.create(
         engine=os.environ["AZURE_OPENAI_MODEL_NAME"],
         messages = messages,
@@ -91,22 +94,18 @@ def get_highlighted_text(query, content):
         top_p=float(os.environ["AZURE_OPENAI_TOP_P"]),
         stop=None
     )
-    print("---------RESPONSE---------")
-    print(response)
-    print("---------RESPONSE---------")
     return response.choices[0].message['content']
 
 # Define the Streamlit app
 def app():
-    st.title("Search query")
+    st.title("Search query - OpenAI")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = run_query(query)
     
         for result in results:
             text = get_highlighted_text(query, result['content'])  
-            st.write(f"<h4>Title: {result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"Score: {result['@search.score']}")  
+            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
             st.write(f"Highlight: {text}", unsafe_allow_html=True)
             st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
                 

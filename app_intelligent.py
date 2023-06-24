@@ -20,7 +20,7 @@ from azure.search.documents.indexes.models import (
     SemanticField,  
     SearchField,  
     SemanticSettings,  
-    VectorSearch,  
+    VectorSearch,
     VectorSearchAlgorithmConfiguration,  
 )  
 
@@ -37,23 +37,57 @@ openai.api_type = "azure"
 openai.api_version = "2023-05-15" 
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT") 
 
+def generate_embeddings(text):
+    response = openai.Embedding.create(
+        input=text, engine="text-embedding-ada-002")
+    embeddings = response['data'][0]['embedding']
+    return embeddings
+
 def run_query(query):
     
     return client.search(  
-        search_text=query,  
+        search_text="",  
+        vector=Vector(value=generate_embeddings(query), k=2, fields="contentVector"),  
         select=["title", "content"] 
-    )  
+    )
+
+def post_processing_prompt(query, content):
+    prompt = """
+        return me the content of the document tranlated into the language that the query was written in.
+        The search query is '""" + query + """' and the content is '""" + content + """'"""
+
+    messages = [{
+        "role": "system",
+        "content": os.environ["AZURE_OPENAI_SYSTEM_MESSAGE"]
+    }]
+
+    messages.append({
+        "role": "user" ,
+        "content": prompt
+    })
+  
+    response = openai.ChatCompletion.create(
+        engine=os.environ["AZURE_OPENAI_MODEL_NAME"],
+        messages = messages,
+        temperature=float(os.environ["AZURE_OPENAI_TEMPERATURE"]),
+        max_tokens=int(os.environ["AZURE_OPENAI_MAX_TOKENS"]),
+        top_p=float(os.environ["AZURE_OPENAI_TOP_P"]),
+        stop=None
+    )
+    return response.choices[0].message['content']
 
 # Define the Streamlit app
 def app():
-    st.title("Search query - Keyword")
+    st.title("Search query - Intelligent Search")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
-        results = client.search(search_text=query, top=2)
+        results = run_query(query)
+    
         for result in results:
+            text = post_processing_prompt(query, result['content'])  
             st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"<p>{result['content'][:4000]}</p>", unsafe_allow_html=True)  
-            st.write('------------------------')
+            st.write(f"<p>{text}</p>", unsafe_allow_html=True)
+            st.write('------------------------')    
 
 if __name__ == "__main__":
     app()
