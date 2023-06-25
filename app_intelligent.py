@@ -82,12 +82,15 @@ def app():
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = run_query(query)
-    
-        for result in results:
-            text = post_processing_prompt(query, result['content'])  
-            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"<p>{text}</p>", unsafe_allow_html=True)
-            st.write('------------------------')    
+        if results:  # Check if results is not empty
+            for result in results:
+                text = post_processing_prompt(query, result['content'])  
+                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
+                st.write(f"<p>{text}</p>", unsafe_allow_html=True)
+                st.write('------------------------')
+        else:  # This block will execute if results is empty    
+            st.write("No results found.")
+        
 
 if __name__ == "__main__":
     app()

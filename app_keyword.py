@@ -49,11 +49,14 @@ def app():
     st.title("Search query - Keyword")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
-        results = client.search(search_text=query, top=2)
-        for result in results:
-            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"<p>{result['content'][:4000]}</p>", unsafe_allow_html=True)  
-            st.write('------------------------')
+        results = client.search(search_text=query, top=5)
+        if results:  # Check if results is not empty
+            for result in results:
+                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)
+                st.write(f"<p>{result['content'][:2000]}</p>", unsafe_allow_html=True)
+                st.write('------------------------')
+        else:  # This block will execute if results is empty
+            st.write("No results found.")
 
 if __name__ == "__main__":
     app()

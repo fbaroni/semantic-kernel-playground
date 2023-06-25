@@ -47,7 +47,7 @@ def run_query(query):
     
     return client.search(  
         search_text="",  
-        vector=Vector(value=generate_embeddings(query), k=3, fields="contentVector"),  
+        vector=Vector(value=generate_embeddings(query), k=2, fields="contentVector"),  
         select=["title", "content"] 
     )
 
@@ -59,12 +59,16 @@ def get_highlighted_text(query, content):
     #     The result must be html
     # """
 
-    prompt = """
-        highlight the sentence that is most relevant to my search query by adding <b style="color:blue;"> sentence </b>. 
-        Reply only with the whole paragraph.
-        The answer should be structured like: <entire paragraph>
+    # prompt = """
+    #     highlight the sentence that is most relevant to my search query by adding <b style="color:blue;"> sentence </b>. 
+    #     Reply only with the whole paragraph.
+    #     The answer should be structured like: <entire paragraph>
+    # """
+    prompt = """Please identify the sentence that is most pertinent to my search query and highlight it in blue 
+    by inserting <b style="color:blue;"> sentence </b>. Your response should consist of the entire paragraph, 
+    including the highlighted sentence and, if available, one surrounding sentence in normal formatting.
     """
-
+    
     messages = [
         {
             "role": "system",
@@ -102,14 +106,14 @@ def app():
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = run_query(query)
-    
-        for result in results:
-            text = get_highlighted_text(query, result['content'])  
-            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"Highlight: {text}", unsafe_allow_html=True)
-            st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
-                
-        # st.write('------------------------')
+        if results:
+            for result in results:
+                text = get_highlighted_text(query, result['content'])  
+                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
+                st.write(f"{text}", unsafe_allow_html=True)
+                st.write(f"Content: <p>{result['content'][:2000]}</p>", unsafe_allow_html=True)
+        else:
+            st.write("No results found")
 
 if __name__ == "__main__":
     app()

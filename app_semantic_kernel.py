@@ -102,12 +102,14 @@ async def app():
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = await run_query(query)
-        for result in results:
-            text = await get_highlighted_text(query, result['content'])  
-            st.write(f"<h4>Title: {result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"Score: {result['@search.score']}")  
-            st.write(f"Answer: {text}", unsafe_allow_html=True)
-            st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
+        if results:
+            for result in results:
+                text = await get_highlighted_text(query, result['content'])  
+                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
+                st.write(f"{text}", unsafe_allow_html=True)
+                st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
+        else:
+            st.write("No results found.")
 
 if __name__ == "__main__":
     asyncio.run(app())

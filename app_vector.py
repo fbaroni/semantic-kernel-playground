@@ -27,7 +27,7 @@ def run_query(query):
     
     return client.search(  
         search_text="",  
-        vector=Vector(value=generate_embeddings(query), k=2, fields="contentVector"),  
+        vector=Vector(value=generate_embeddings(query), k=5, fields="contentVector"),  
         select=["title", "content"] 
     )
 
@@ -36,11 +36,12 @@ def app():
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = run_query(query)
-    
-        for result in results:
-            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-            st.write(f"<p>{result['content'][:2000]}</p>", unsafe_allow_html=True)
-            st.write('------------------------')
-
+        if results:  # Check if results is not empty
+            for result in results:
+                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)
+                st.write(f"<p>{result['content'][:2000]}</p>", unsafe_allow_html=True)
+                st.write('------------------------')
+        else:  # This block will execute if results is empty
+            st.write("No results found.")
 if __name__ == "__main__":
     app()
