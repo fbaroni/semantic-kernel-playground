@@ -6,30 +6,11 @@ from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 import semantic_kernel as sk
 import asyncio
-import time
 from concurrent.futures import ThreadPoolExecutor
 import semantic_kernel.connectors.ai.open_ai as sk_oai
-from semantic_kernel.connectors.ai.open_ai import OpenAITextCompletion, AzureTextCompletion
-from tenacity import retry, wait_random_exponential, stop_after_attempt  
 from azure.core.credentials import AzureKeyCredential  
 from azure.search.documents import SearchClient  
-from azure.search.documents.indexes import SearchIndexClient  
 from azure.search.documents.models import Vector  
-from azure.search.documents.indexes.models import (  
-    SearchIndex,  
-    SearchField,  
-    SearchFieldDataType,  
-    SimpleField,  
-    SearchableField,  
-    SearchIndex,  
-    SemanticConfiguration,  
-    PrioritizedFields,  
-    SemanticField,  
-    SearchField,  
-    SemanticSettings,  
-    VectorSearch,  
-    VectorSearchAlgorithmConfiguration,  
-)  
 import openai
 
 # logger = logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
@@ -92,24 +73,19 @@ async def get_highlighted_text(query, content):
     chat_function = kernel.register_semantic_function("ChatBot", "Chat", function_config)
     context_vars = sk.ContextVariables()
     bot_answer = await kernel.run_async(chat_function, input_vars=context_vars)
-    print("---------RESPONSE---------")
-    print(bot_answer)
-    print("---------RESPONSE---------")
-    return str(bot_answer)
+    return str(bot_an
+               swer)
 # Define the Streamlit app
 async def app():
     st.title("Search query")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = await run_query(query)
-        if results:
-            for result in results:
-                text = await get_highlighted_text(query, result['content'])  
-                st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
-                st.write(f"{text}", unsafe_allow_html=True)
-                st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
-        else:
-            st.write("No results found.")
+        for result in results:
+            text = await get_highlighted_text(query, result['content'])  
+            st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
+            st.write(f"{text}", unsafe_allow_html=True)
+            st.write(f"Content: <p>{result['content'][:1000]}</p>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     asyncio.run(app())

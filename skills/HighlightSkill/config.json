@@ -1,0 +1,23 @@
+
+  
+{
+    "schema": 1,
+    "type": "chat-completion",
+    "description": "Summarize given text or any text document",
+    "completion": {
+        "max_tokens": 50,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "frequency_penalty": 0,
+        "presence_penalty": 0
+    },
+    "input": {
+        "parameters": [
+            {
+                "name": "input",
+                "description": "Text to Highlight",
+                "defaultValue": ""
+            }
+        ]
+    }
+}
