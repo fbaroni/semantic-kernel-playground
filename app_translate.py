@@ -53,9 +53,15 @@ def run_query(query):
 
 def get_translated_text(query, content):
 
-    prompt = """Please find the sentence that best matches my search query and return it translated into the language 
-    of the query. If no sentence is relevant, return the first paragraph translated into the query's language. 
-    The response should include the entire paragraph containing the sentence."""
+    # prompt = """Please identify the sentence that is most pertinent to my search query. Your response should consist of the entire paragraph, 
+    # including the identified sentence and the two surrounding sentences in normal formatting. Always translate the response into English.
+    # """
+
+    prompt = """Identify the sentence that is most pertinent to my search query and highlight it in blue 
+    by inserting <b style="color:blue;"> sentence </b>. 
+    Your response should consist of the entire paragraph translated to the original language of the query
+    including the highlighted sentence and, if available, one surrounding sentence in normal formatting.
+    """
     
     messages = [
         {
@@ -71,7 +77,7 @@ def get_translated_text(query, content):
 
     messages.append({
         "role": "user" ,
-        "content": "The search query is '" + query + "'"
+        "content": "The search query is '" + query + "'."
     })
 
     messages.append({
