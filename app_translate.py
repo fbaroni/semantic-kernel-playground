@@ -57,14 +57,11 @@ def get_translated_text(query, content):
     # including the identified sentence and the two surrounding sentences in normal formatting. Always translate the response into English.
     # """
 
-    prompt = """
-    Identify the sentence that is most pertinent to my 'search query' and highlight it in blue by inserting <b style="color:blue;"> sentence </b>. 
-    The response should consist of the entire paragraph.
-    Include the highlighted sentence and, if available, one surrounding sentence in normal formatting.
-    """
-    print('-----------------------------')   
-    print(prompt)
-    print('-----------------------------')
+    # prompt = """
+    # Identify the sentence that is most pertinent to my 'search query' and highlight it in blue by inserting <b style="color:blue;"> sentence </b>. 
+    # The response should consist of the entire paragraph.
+    # Include the highlighted sentence and, if available, one surrounding sentence in normal formatting.
+    # """
     messages = [
         {
             "role": "system",
@@ -72,10 +69,10 @@ def get_translated_text(query, content):
         }
     ]
 
-    messages.append({
-        "role": "user" ,
-        "content": prompt
-    })
+    # messages.append({
+    #     "role": "user" ,
+    #     "content": prompt
+    # })
 
     messages.append({
         "role": "user" ,
@@ -88,7 +85,7 @@ def get_translated_text(query, content):
     })
     messages.append({
         "role": "user" ,
-        "content": "Identify the #language# of '" + query + "'." + "' Translate the entire response into the #language# you have previously identified."
+        "content": "Identify the #language# of the query: '" + query + "'." + "' Translate the entire response into the #language# of the query you have previously identified."
     })
         
     response = openai.ChatCompletion.create(
@@ -99,9 +96,6 @@ def get_translated_text(query, content):
         top_p=float(os.environ["AZURE_OPENAI_TOP_P"]),
         stop=None
     )
-    print('-----------------------------')
-    print(response)
-    print('-----------------------------')
     return response.choices[0].message['content']
 
 # Define the Streamlit app

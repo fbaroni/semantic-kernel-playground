@@ -20,8 +20,9 @@ openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 def generate_embeddings(text):
     response = openai.Embedding.create(
         input=text, engine="text-embedding-ada-002")
-    embeddings = response['data'][0]['embedding']
     
+    embeddings = response['data'][0]['embedding']
+
     return embeddings
 
 def run_query(query):
