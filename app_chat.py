@@ -53,17 +53,6 @@ def run_query(query):
 
 def get_highlighted_text(query, content):
 
-    # prompt = """
-    #     Can you highlight the sentence that is most relevant to my search term? 
-    #     Please return the "highlighted text" in the paragraph between <p style="color:blue;"> and </p> and translated to the language in which the search term was written. 
-    #     The result must be html
-    # """
-
-    # prompt = """
-    #     highlight the sentence that is most relevant to my search query by adding <b style="color:blue;"> sentence </b>. 
-    #     Reply only with the whole paragraph.
-    #     The answer should be structured like: <entire paragraph>
-    # """
     prompt = """Please identify the sentence that is most pertinent to my search query and highlight it in blue 
     by inserting <b style="color:blue;"> sentence </b>. Your response should consist of the entire paragraph, 
     including the highlighted sentence and, if available, one surrounding sentence in normal formatting.

@@ -53,7 +53,9 @@ def run_query(query):
 
 def get_translated_text(query, content):
 
-    prompt = """Please find the sentence that best matches my search query and return it translated into the language of the query. If no sentence is relevant, return the first paragraph translated into the query's language. The response should include the entire paragraph containing the sentence."""
+    prompt = """Please find the sentence that best matches my search query and return it translated into the language 
+    of the query. If no sentence is relevant, return the first paragraph translated into the query's language. 
+    The response should include the entire paragraph containing the sentence."""
     
     messages = [
         {
