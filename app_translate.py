@@ -53,26 +53,12 @@ def run_query(query):
 
 def get_translated_text(query, content):
 
-    # prompt = """Please identify the sentence that is most pertinent to my search query. Your response should consist of the entire paragraph, 
-    # including the identified sentence and the two surrounding sentences in normal formatting. Always translate the response into English.
-    # """
-
-    # prompt = """
-    # Identify the sentence that is most pertinent to my 'search query' and highlight it in blue by inserting <b style="color:blue;"> sentence </b>. 
-    # The response should consist of the entire paragraph.
-    # Include the highlighted sentence and, if available, one surrounding sentence in normal formatting.
-    # """
     messages = [
         {
             "role": "system",
             "content": "You are an assitant for a lawyer. You are given contracts and you must reply based on the provided data." 
         }
     ]
-
-    # messages.append({
-    #     "role": "user" ,
-    #     "content": prompt
-    # })
 
     messages.append({
         "role": "user" ,
@@ -98,7 +84,6 @@ def get_translated_text(query, content):
     )
     return response.choices[0].message['content']
 
-# Define the Streamlit app
 def app():
     st.title("Search query - Translation")
     query = st.text_input("Enter your query here: ")
