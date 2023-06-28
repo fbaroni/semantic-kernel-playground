@@ -51,13 +51,8 @@ def run_query(query):
         select=["title", "content"] 
     )
 
-def get_highlighted_text(query, content):
+def get_translated_text(query, content):
 
-    prompt = """Please identify the sentence that is most pertinent to my search query and highlight it in blue 
-    by inserting <b style="color:blue;"> sentence </b>. Your response should consist of the entire paragraph, 
-    including the highlighted sentence and, if available, one surrounding sentence in normal formatting.
-    """
-    
     messages = [
         {
             "role": "system",
@@ -67,18 +62,18 @@ def get_highlighted_text(query, content):
 
     messages.append({
         "role": "user" ,
-        "content": prompt
-    })
-
-    messages.append({
-        "role": "user" ,
-        "content": "The search query is '" + query + "'"
+        "content": "The 'search query' is '" + query + "'."
     })
 
     messages.append({
         "role": "user" ,
         "content": "The content is '" + content + "'"
     })
+    messages.append({
+        "role": "user" ,
+        "content": "Identify the #language# of the query: '" + query + "'." + "' Translate the entire response into the #language# of the query you have previously identified."
+    })
+        
     response = openai.ChatCompletion.create(
         engine=os.environ["AZURE_OPENAI_MODEL_NAME"],
         messages = messages,
@@ -89,15 +84,14 @@ def get_highlighted_text(query, content):
     )
     return response.choices[0].message['content']
 
-# Define the Streamlit app
 def app():
-    st.title("Search query - OpenAI")
+    st.title("Search query - Demo 3")
     query = st.text_input("Enter your query here: ")
     if st.button("Search"):
         results = run_query(query)
         if results:
             for result in results:
-                text = get_highlighted_text(query, result['content'])  
+                text = get_translated_text(query, result['content'])  
                 st.write(f"<h4>{result['title']}</h4>", unsafe_allow_html=True)  
                 st.write(f"{text}", unsafe_allow_html=True)
                 st.write(f"Content: <p>{result['content'][:2000]}</p>", unsafe_allow_html=True)
